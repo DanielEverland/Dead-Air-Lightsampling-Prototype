@@ -29,7 +29,7 @@ public class LightSamplerEditor : Editor {
         {
             EditorGUI.indentLevel++;
 
-            EditorGUILayout.PropertyField(_centerProperty);
+            EditorGUILayout.PropertyField(_centerProperty, new GUIContent("Center", TOOLTIP_OVERRIDE_CENTER));
 
             EditorGUI.indentLevel--;
         }
