@@ -9,6 +9,10 @@ public class LightSamplingManager : MonoBehaviour {
     public static event System.Action OnSample;
     public static event System.Action OnAfterSample;
 
+    public static IEnumerable<Light> AllLights { get { return _allLights; } }
+
+    private static List<Light> _allLights;
+
     /// <summary>
     /// Time in seconds between every sampling update
     /// </summary>
@@ -16,15 +20,41 @@ public class LightSamplingManager : MonoBehaviour {
 
     private float _time;
 
+    private void Awake()
+    {
+        _allLights = new List<Light>();
+    }
     private void Update()
     {
         _time += Time.deltaTime;
         
         if(_time >= UPDATE_INTERVAL)
         {
-            OnBeforeSample();
-            OnSample();
-            OnAfterSample();
+            Tick();
         }
+    }
+    private void Tick()
+    {
+        BeforeSample();
+        Sample();
+        AfterSample();
+    }
+    private void BeforeSample()
+    {
+        GetAllLightSources();
+
+        OnBeforeSample();
+    }
+    private void Sample()
+    {
+        OnSample();
+    }
+    private void AfterSample()
+    {
+        OnAfterSample();
+    }
+    private void GetAllLightSources()
+    {
+        _allLights = new List<Light>(FindObjectsOfType<Light>());
     }
 }
