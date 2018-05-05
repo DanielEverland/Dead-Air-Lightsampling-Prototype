@@ -45,7 +45,7 @@ public static class LightSampling {
     {
         return !Physics.Raycast(point, light.transform.position - point);
     }
-    private static float QuadraticAttenuationFalloff(Vector2 a, Vector2 b, float range)
+    private static float QuadraticAttenuationFalloff(Vector3 a, Vector3 b, float range)
     {
         float distance = Vector3.Distance(a, b);
         
