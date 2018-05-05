@@ -23,27 +23,56 @@ public static class LightSampling {
     }
     private static float GetIntensityFromLight(Light light, Vector3 point)
     {
+        if (!IsVisible(light, point))
+            return 0;
+
         switch (light.type)
         {
             case LightType.Point:
                 return GetIntensityFromPointLight(light, point);
+            case LightType.Directional:
+                return GetIntensityFromDirectionalLight(light, point);
             default:
                 throw new System.NotImplementedException();
         }
+    }
+    private static float GetIntensityFromDirectionalLight(Light light, Vector3 point)
+    {
+        if (light.type != LightType.Directional)
+            throw new System.ArgumentException();
+
+        return light.intensity;
     }
     private static float GetIntensityFromPointLight(Light light, Vector3 point)
     {
         if (light.type != LightType.Point)
             throw new System.ArgumentException();
-
-        if (!IsVisible(light, point))
-            return 0;
-
+        
         return QuadraticAttenuationFalloff(light.transform.position, point, light.range) * light.intensity;
     }
     private static bool IsVisible(Light light, Vector3 point)
     {
-        return !Physics.Raycast(point, light.transform.position - point);
+        switch (light.type)
+        {
+            case LightType.Spot:
+                return IsPointVisible(light.transform.position, point);
+            case LightType.Directional:
+                return IsDirectionVisible(point, light.transform.forward);
+            case LightType.Point:
+                return IsPointVisible(light.transform.position, point);
+            default:
+                throw new System.NotImplementedException();
+        }
+    }
+    private static bool IsDirectionVisible(Vector3 from, Vector3 direction)
+    {
+        return !Physics.Raycast(from, -direction);
+    }
+    private static bool IsPointVisible(Vector3 from, Vector3 to)
+    {
+        Vector3 delta = from - to;
+
+        return !Physics.Raycast(from, -delta.normalized, delta.magnitude);
     }
     private static float QuadraticAttenuationFalloff(Vector3 a, Vector3 b, float range)
     {
