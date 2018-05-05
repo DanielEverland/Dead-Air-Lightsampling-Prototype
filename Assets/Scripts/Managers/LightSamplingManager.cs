@@ -9,7 +9,7 @@ public class LightSamplingManager : MonoBehaviour {
     public static event System.Action OnSample;
     public static event System.Action OnAfterSample;
 
-    public static IEnumerable<Light> AllLights { get { return _allLights; } }
+    public static IEnumerable<Light> AllLights { get { return new List<Light>(FindObjectsOfType<Light>()); } }
 
     private static List<Light> _allLights;
 
