@@ -48,7 +48,8 @@ public static class LightSampling {
     private static float QuadraticAttenuationFalloff(Vector3 a, Vector3 b, float range)
     {
         float distance = Vector3.Distance(a, b);
+        float interpolant = Mathf.InverseLerp(0, range, distance);
         
-        return 1.0f / (1.0f + 25.0f * distance * distance);
+        return 1.0f / (1.0f + 25.0f * interpolant * interpolant);
     }
 }
