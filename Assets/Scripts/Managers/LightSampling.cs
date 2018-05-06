@@ -48,8 +48,8 @@ public static class LightSampling {
             throw new System.ArgumentException();
 
         float attenuation = QuadraticAttenuationFalloff(light.transform.position, point, light.range) * light.intensity;
-
-        return attenuation * GetRadialFalloff(point, light.transform.position, light.transform.forward, light.range, light.spotAngle);
+        
+        return attenuation * GetSpotlightFalloff(point, light);
     }
     private static float GetIntensityFromDirectionalLight(Light light, Vector3 point)
     {
@@ -96,16 +96,58 @@ public static class LightSampling {
 
         return !Physics.Raycast(from, -delta.normalized, delta.magnitude);
     }
-    private static float GetRadialFalloff(Vector3 point, Vector3 coneStartPoint, Vector3 direction, float distance, float coneAngle)
+    private static float GetSpotlightFalloff(Vector3 point, Light light)
     {
-        Plane plane = new Plane(direction, coneStartPoint);
+        if(light.cookie != null)
+        {
+            return GetFalloffFromCookie(point, light, ((Texture2D)light.cookie).GetReadableTexture());
+        }
+        else if(LightSamplingManager.DefaultSpotCookie != null)
+        {
+            return GetFalloffFromCookie(point, light, LightSamplingManager.DefaultSpotCookie);
+        }
+        else
+        {
+            return ProceduralSpotCookie(point, light);
+        }
+    }
+    private static float GetFalloffFromCookie(Vector3 point, Light light, Texture2D cookie)
+    {
+        Plane plane = new Plane(light.transform.forward, light.transform.position);
         Vector3 pointOnPlane = plane.ClosestPointOnPlane(point);
         Vector3 pointOnPlaneDelta = point - pointOnPlane;
 
         float distanceFromPlane = pointOnPlaneDelta.magnitude;
-        float circleSizeAtDistance = distanceFromPlane * Mathf.Tan(Mathf.Deg2Rad * coneAngle / 2.0f);
+        float circleSizeAtDistance = distanceFromPlane * Mathf.Tan(Mathf.Deg2Rad * light.spotAngle / 2.0f);
 
-        Vector3 pointAlongAxis = coneStartPoint + pointOnPlaneDelta.normalized * distanceFromPlane;
+        Vector3 pointAlongAxis = light.transform.position + pointOnPlaneDelta.normalized * distanceFromPlane;
+        Vector3 farPointDelta = point - pointAlongAxis;
+
+        float distanceToPointAlongAxis = Vector3.Distance(point, pointAlongAxis);
+        float distanceInterpolator = Mathf.InverseLerp(0, circleSizeAtDistance, distanceToPointAlongAxis);
+
+        Vector2Int halfSize = new Vector2Int((int)((float)cookie.width / 2), (int)((float)cookie.height / 2));
+
+        Vector2Int textureIndex = new Vector2Int()
+        {
+            x = (int)(farPointDelta.normalized.x * distanceInterpolator * halfSize.x) + halfSize.x,
+            y = (int)(farPointDelta.normalized.y * distanceInterpolator * halfSize.y) + halfSize.y,
+        };
+
+        Color color = cookie.GetPixel(textureIndex.x, textureIndex.y);
+        
+        return color.a;
+    }
+    private static float ProceduralSpotCookie(Vector3 point, Light light)
+    {
+        Plane plane = new Plane(light.transform.forward, light.transform.position);
+        Vector3 pointOnPlane = plane.ClosestPointOnPlane(point);
+        Vector3 pointOnPlaneDelta = point - pointOnPlane;
+
+        float distanceFromPlane = pointOnPlaneDelta.magnitude;
+        float circleSizeAtDistance = distanceFromPlane * Mathf.Tan(Mathf.Deg2Rad * light.spotAngle / 2.0f);
+
+        Vector3 pointAlongAxis = light.transform.position + pointOnPlaneDelta.normalized * distanceFromPlane;
 
         float distanceToPointAlongAxis = Vector3.Distance(point, pointAlongAxis);
         

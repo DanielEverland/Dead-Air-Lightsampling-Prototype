@@ -9,6 +9,7 @@ public class LightSamplingRenderer : MonoBehaviour {
 
     [SerializeField]
     private SpriteRenderer _spriteRenderer;
+    [Range(1, 500)]
     [SerializeField]
     private float _pixelPerUnit = 1;
     [SerializeField]
@@ -21,6 +22,8 @@ public class LightSamplingRenderer : MonoBehaviour {
     private void DoRender()
     {
         Texture2D texture = new Texture2D((int)(_size.x * _pixelPerUnit), (int)(_size.y * _pixelPerUnit), TextureFormat.RGBA32, false, true);
+        texture.wrapMode = TextureWrapMode.Clamp;
+
         Color[] color = new Color[texture.width * texture.height];
 
         for (int x = 0; x < texture.width; x++)
