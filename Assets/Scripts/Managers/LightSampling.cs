@@ -19,7 +19,11 @@ public static class LightSampling {
             }
         }
 
-        return intensity;
+        return intensity + GetAmbientIntensity();
+    }
+    private static float GetAmbientIntensity()
+    {
+        return RenderSettings.ambientLight.grayscale;
     }
     private static float GetIntensityFromLight(Light light, Vector3 point)
     {
